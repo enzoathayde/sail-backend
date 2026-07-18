@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: sail
+  datasource:
+    url: jdbc:postgresql://localhost:5432/sail?currentSchema=sail
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
