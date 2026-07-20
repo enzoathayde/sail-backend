@@ -11,3 +11,6 @@ server:
   servlet:
     context-path: /api
 web: http://localhost:8081
+security:
+  token:
+    secret: secret
