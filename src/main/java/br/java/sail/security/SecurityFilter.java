@@ -28,15 +28,6 @@ public class SecurityFilter extends OncePerRequestFilter {
     private final VaultUserRepository vaultUserRepository;
 
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        String path = request.getRequestURI().substring(request.getContextPath().length());
-        return "OPTIONS".equalsIgnoreCase(request.getMethod())
-                || "/vault-users/generate".equals(path)
-                || "/vault-users/auth".equals(path)
-                || "/test".equals(path);
-    }
-
-    @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String header = request.getHeader(AUTHORIZATION);
         if (header == null || !header.startsWith("Bearer ")) {
@@ -45,6 +36,7 @@ public class SecurityFilter extends OncePerRequestFilter {
         }
 
         String token = header.substring(7);
+
         try {
             DecodedJWT decodedJWT = jwtTokenService.verify(token);
             String fingerprint = decodedJWT.getClaim("fingerprint").asString();
