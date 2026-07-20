@@ -8,6 +8,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -20,15 +21,11 @@ import java.util.Collections;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 @Component
+@RequiredArgsConstructor
 public class SecurityFilter extends OncePerRequestFilter {
 
     private final JwtTokenService jwtTokenService;
     private final VaultUserRepository vaultUserRepository;
-
-    public SecurityFilter(JwtTokenService jwtTokenService, VaultUserRepository vaultUserRepository) {
-        this.jwtTokenService = jwtTokenService;
-        this.vaultUserRepository = vaultUserRepository;
-    }
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
