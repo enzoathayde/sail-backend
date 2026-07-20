@@ -23,6 +23,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(request -> request
                         .requestMatchers(HttpMethod.POST, "/vault-users/generate", "/vault-users/auth").permitAll()
+                        .requestMatchers("/chat/**", "/ws/**", "/ws").permitAll()
                         .requestMatchers("/test", "/test/**").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class)
