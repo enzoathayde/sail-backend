@@ -20,4 +20,22 @@ public class CustomExceptionHandler {
                 , HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler
+    public ResponseEntity<StandardResponse<?>> createObjectError(CreateSecurityObjectException ex) {
+        log.warn("Erro ao criar recurso: {}", ex.getMessage());
+
+        return new ResponseEntity<>(
+                new StandardResponse<>("Falha ao criar recurso.", true, null)
+                , HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<StandardResponse<?>> invalidVaultKey(InvalidVaultKeyException ex) {
+        log.warn("Credenciais inválidas: {}", ex.getMessage());
+
+        return new ResponseEntity<>(
+                new StandardResponse<>("Credenciais inválidas", true, null)
+                , HttpStatus.UNAUTHORIZED);
+    }
+
 }
