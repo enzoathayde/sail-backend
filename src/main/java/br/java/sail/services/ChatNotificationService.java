@@ -12,7 +12,7 @@ public class ChatNotificationService {
 
     private final SimpMessagingTemplate messagingTemplate;
 
-    public void notifyUser(Long userId, ChatMessageResponse payload) {
+    public void notifyUser(Long userId, String payload) {
         messagingTemplate.convertAndSend("/topic/users/" + userId, payload);
     }
 }

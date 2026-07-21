@@ -29,14 +29,7 @@ public class ChatRabbitConsumer {
             String assistantContent = mockAiResponseService.replyFor(event.content());
             ChatMessage saved = chatService.saveAssistantMessage(event.userId(), assistantContent);
             chatNotificationService.notifyUser(
-                    event.userId(),
-                    new ChatMessageResponse(
-                            saved.getId(),
-                            saved.getUserId(),
-                            saved.getSender().name(),
-                            saved.getContent(),
-                            saved.getCreatedAt()
-                    )
+                    event.userId(),"Nova mensagem gerada."
             );
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();

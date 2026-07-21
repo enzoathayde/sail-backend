@@ -25,15 +25,8 @@
      document.getElementById("list-container").innerHTML = `
       <div>
       ${messages.map(message => `
-        <span>MESSAGE ID:${message.id}</span>
+        <span>${message}</span>
         <br>
-        <span>USER ID:${message.userId}</span>
-        <br>
-        <span>ASSISTANT: ${message.sender}</span>
-        <br>
-        <span>CONTENT: ${message.content}</span>
-        <br>
-        <span>CREATED AT:${message.createdAt}</span>
       `)}
       </div>
     `;
@@ -45,9 +38,7 @@
   stomp.connect({}, function () {
 
     stomp.subscribe(`/topic/users/${userIdentifier}`, function (message) {
-      const call = JSON.parse(message.body);
-      console.log('call :>> ', call);
-      messages.push(call);
+      messages.push(message);
       loadList();
     });
   }, function (error) {
