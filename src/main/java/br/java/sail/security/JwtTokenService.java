@@ -37,6 +37,7 @@ public class JwtTokenService {
         return JWT.create()
                 .withIssuer(ISSUER)
                 .withSubject(user.getUserName())
+                .withClaim("userIdentifier", user.getIdUser())
                 .withClaim("fingerprint", user.getVaultKeyFingerprint())
                 .withClaim("username", user.getUserName())
                 .withIssuedAt(Date.from(now))
