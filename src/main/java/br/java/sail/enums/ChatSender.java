@@ -1,4 +1,4 @@
-package br.java.sail.entities;
+package br.java.sail.enums;
 
 public enum ChatSender {
     USER,

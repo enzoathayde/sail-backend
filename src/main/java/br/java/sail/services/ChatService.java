@@ -2,7 +2,7 @@ package br.java.sail.services;
 
 import br.java.sail.dtos.*;
 import br.java.sail.entities.ChatMessage;
-import br.java.sail.entities.ChatSender;
+import br.java.sail.enums.ChatSender;
 import br.java.sail.repositories.ChatMessageRepository;
 import br.java.sail.usecases.SendMessageUseCase;
 import lombok.RequiredArgsConstructor;
