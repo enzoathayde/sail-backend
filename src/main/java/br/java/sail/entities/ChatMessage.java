@@ -46,4 +46,12 @@ public class ChatMessage {
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    public ChatMessage(Long userIdentifier, ChatSender senderType, String content, LocalDateTime createdAt) {
+        this.userId = userIdentifier;
+        this.sender = senderType;
+        this.content = content;
+        this.createdAt = createdAt;
+    }
+
 }

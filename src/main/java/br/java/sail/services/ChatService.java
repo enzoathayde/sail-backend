@@ -6,6 +6,7 @@ import br.java.sail.dtos.ChatMessageResponse;
 import br.java.sail.entities.ChatMessage;
 import br.java.sail.entities.ChatSender;
 import br.java.sail.repositories.ChatMessageRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -13,19 +14,15 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 
 @Service
+@RequiredArgsConstructor
 public class ChatService {
 
     private final ChatMessageRepository chatMessageRepository;
     private final ChatRabbitProducer chatRabbitProducer;
 
-    public ChatService(ChatMessageRepository chatMessageRepository, ChatRabbitProducer chatRabbitProducer) {
-        this.chatMessageRepository = chatMessageRepository;
-        this.chatRabbitProducer = chatRabbitProducer;
-    }
 
     public ResponseEntity<ChatMessageResponse> sendMessage(ChatMessageRequest request) {
         ChatMessage saved = chatMessageRepository.save(new ChatMessage(
-                null,
                 request.userId(),
                 ChatSender.USER,
                 request.content(),
