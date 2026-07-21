@@ -1,11 +1,10 @@
 package br.java.sail.services;
 
-import br.java.sail.dtos.ChatMessageEvent;
-import br.java.sail.dtos.ChatMessageRequest;
-import br.java.sail.dtos.ChatMessageResponse;
+import br.java.sail.dtos.*;
 import br.java.sail.entities.ChatMessage;
 import br.java.sail.entities.ChatSender;
 import br.java.sail.repositories.ChatMessageRepository;
+import br.java.sail.usecases.SendMessageUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,13 +14,23 @@ import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
-public class ChatService {
+public class ChatService implements SendMessageUseCase {
 
     private final ChatMessageRepository chatMessageRepository;
     private final ChatRabbitProducer chatRabbitProducer;
 
+    public ChatMessage saveAssistantMessage(Long userId, String content) {
+        return chatMessageRepository.save(new ChatMessage(
+                null,
+                userId,
+                ChatSender.ASSISTANT,
+                content,
+                LocalDateTime.now()
+        ));
+    }
 
-    public ResponseEntity<ChatMessageResponse> sendMessage(ChatMessageRequest request) {
+    @Override
+    public ResponseEntity<StandardResponse<ChatMessageResponse>> execute(ChatMessageRequest request) {
         ChatMessage saved = chatMessageRepository.save(new ChatMessage(
                 request.userId(),
                 ChatSender.USER,
@@ -32,22 +41,12 @@ public class ChatService {
         chatRabbitProducer.publish(new ChatMessageEvent(saved.getId(), saved.getUserId(), saved.getContent()));
 
         return ResponseEntity.status(HttpStatus.ACCEPTED)
-                .body(new ChatMessageResponse(
+                .body(new StandardResponse<>( "Mensagem encaminhada com sucesso", false,new ChatMessageResponse(
                         saved.getId(),
                         saved.getUserId(),
                         saved.getSender().name(),
                         saved.getContent(),
                         saved.getCreatedAt()
-                ));
-    }
-
-    public ChatMessage saveAssistantMessage(Long userId, String content) {
-        return chatMessageRepository.save(new ChatMessage(
-                null,
-                userId,
-                ChatSender.ASSISTANT,
-                content,
-                LocalDateTime.now()
-        ));
+                )));
     }
 }
