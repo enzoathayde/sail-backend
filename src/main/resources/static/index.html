@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel de Mensagens</title>
+</head>
+
+<body>
+    <div id="title"></div>
+    <div id="list-container"></div>
+</body>
+
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script>
+
+  // u can switch id based on your user
+  const userIdentifier = 6;
+  const titleTemplate = `<h1>Mensagens do usuário ${userIdentifier}</h1>`
+  document.getElementById("title").innerHTML = titleTemplate;
+
+  const messages = [];
+  function loadList() {
+     document.getElementById("list-container").innerHTML = `
+      <div>
+      ${messages.map(message => `
+        <span>MESSAGE ID:${message.id}</span>
+        <br>
+        <span>USER ID:${message.userId}</span>
+        <br>
+        <span>ASSISTANT: ${message.sender}</span>
+        <br>
+        <span>CONTENT: ${message.content}</span>
+        <br>
+        <span>CREATED AT:${message.createdAt}</span>
+      `)}
+      </div>
+    `;
+  }
+
+  const socket = new SockJS('/api/ws');
+  const stomp = Stomp.over(socket);
+
+  stomp.connect({}, function () {
+
+    stomp.subscribe(`/topic/users/${userIdentifier}`, function (message) {
+      const call = JSON.parse(message.body);
+      console.log('call :>> ', call);
+      messages.push(call);
+      loadList();
+    });
+  }, function (error) {
+    console.error('Erro na conexão:', error);
+  });
+
+</script>
+</html>

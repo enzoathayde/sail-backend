@@ -33,6 +33,7 @@ public class SecurityFilter extends OncePerRequestFilter {
         return "OPTIONS".equalsIgnoreCase(request.getMethod())
                 || "/vault-users/generate".equals(path)
                 || "/vault-users/auth".equals(path)
+                || "/index.html".equals(path)
                 || path.startsWith("/chat/")
                 || path.startsWith("/ws")
                 || "/test".equals(path);
