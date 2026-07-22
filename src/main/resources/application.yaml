@@ -14,3 +14,7 @@ web: http://localhost:8081
 security:
   token:
     secret: secret
+rabbit:
+  exchange: chat-exchange
+  queue: messages-queue
+  routing-key: messages-routing

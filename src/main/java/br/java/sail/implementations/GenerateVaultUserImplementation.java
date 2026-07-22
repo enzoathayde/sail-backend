@@ -69,7 +69,7 @@ public class GenerateVaultUserImplementation implements GenerateVaultUserUseCase
                     )
             );
 
-            String generatedToken = generateToken(fingerprint, userName);
+            String generatedToken = generateToken(fingerprint, userName, saved.getIdUser());
 
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(new StandardResponse<>(
@@ -107,11 +107,12 @@ public class GenerateVaultUserImplementation implements GenerateVaultUserUseCase
         return words;
     }
 
-    public String generateToken(String fingerPrint, String userName) {
+    public String generateToken(String fingerPrint, String userName, Long userIdentifier) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(secret);
             String token = JWT.create()
                     .withIssuer("auth-api")
+                    .withClaim("userIdentifier", userIdentifier)
                     .withClaim("fingerprint", fingerPrint)
                     .withClaim("username", userName)
                     .withExpiresAt(genExpirationDate())

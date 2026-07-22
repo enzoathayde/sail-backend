@@ -22,7 +22,9 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(request -> request
+                        .requestMatchers( "/index.html").permitAll()
                         .requestMatchers(HttpMethod.POST, "/vault-users/generate", "/vault-users/auth").permitAll()
+                        .requestMatchers("/ws/**", "/ws").permitAll()
                         .requestMatchers("/test", "/test/**").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class)
