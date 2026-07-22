@@ -24,7 +24,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(request -> request
                         .requestMatchers( "/index.html").permitAll()
                         .requestMatchers(HttpMethod.POST, "/vault-users/generate", "/vault-users/auth").permitAll()
-                        .requestMatchers("/chat/**", "/ws/**", "/ws").permitAll()
+                        .requestMatchers("/ws/**", "/ws").permitAll()
                         .requestMatchers("/test", "/test/**").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class)

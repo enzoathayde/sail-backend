@@ -1,6 +1,7 @@
 package br.java.sail.security;
 
 import br.java.sail.entities.VaultUser;
+import br.java.sail.exceptions.NotFoundException;
 import br.java.sail.repositories.VaultUserRepository;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
@@ -28,18 +29,6 @@ public class SecurityFilter extends OncePerRequestFilter {
     private final VaultUserRepository vaultUserRepository;
 
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        String path = request.getRequestURI().substring(request.getContextPath().length());
-        return "OPTIONS".equalsIgnoreCase(request.getMethod())
-                || "/vault-users/generate".equals(path)
-                || "/vault-users/auth".equals(path)
-                || "/index.html".equals(path)
-                || path.startsWith("/chat/")
-                || path.startsWith("/ws")
-                || "/test".equals(path);
-    }
-
-    @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String header = request.getHeader(AUTHORIZATION);
         if (header == null || !header.startsWith("Bearer ")) {
@@ -52,11 +41,11 @@ public class SecurityFilter extends OncePerRequestFilter {
         try {
             DecodedJWT decodedJWT = jwtTokenService.verify(token);
             String fingerprint = decodedJWT.getClaim("fingerprint").asString();
-            String userName = decodedJWT.getSubject();
 
-            VaultUser user = vaultUserRepository.findByVaultKeyFingerprint(fingerprint)
-                    .filter(vaultUser -> vaultUser.getUserName().equals(userName))
-                    .orElseThrow();
+            VaultUser user = vaultUserRepository.findByVaultKeyFingerprint(fingerprint).orElseThrow();
+            if (!fingerprint.equals(user.getVaultKeyFingerprint())) {
+                throw new NotFoundException("Fingerprint não encontrada.");
+            }
 
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                     user.getUserName(),
