@@ -1,5 +1,6 @@
 package br.java.sail.entities;
 
+import br.java.sail.dtos.StandardResponse;
 import br.java.sail.enums.ChatSender;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -48,11 +49,12 @@ public class ChatMessage {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    public ChatMessage(Long userIdentifier, ChatSender senderType, String content, LocalDateTime createdAt) {
-        this.userId = userIdentifier;
-        this.sender = senderType;
+    public ChatMessage(Long userId, ChatSender sender, String content) {
+        this.userId = userId;
+        this.sender = sender;
         this.content = content;
-        this.createdAt = createdAt;
+        this.createdAt = LocalDateTime.now();
     }
+
 
 }

@@ -19,4 +19,4 @@ rabbit:
   queue: messages-queue
   routing-key: messages-routing
 gemini:
-  api-key: a
+  api-key: AQ.Ab8RN6IjzJtj95rrXIP-H_tJXxqcKPfnydd-KaktKEETL3jo2A

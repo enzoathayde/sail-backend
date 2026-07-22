@@ -5,6 +5,7 @@ import br.java.sail.entities.ChatMessage;
 import br.java.sail.enums.ChatSender;
 import br.java.sail.repositories.ChatMessageRepository;
 import br.java.sail.usecases.SendMessageUseCase;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,8 +35,7 @@ public class ChatService implements SendMessageUseCase {
         ChatMessage saved = chatMessageRepository.save(new ChatMessage(
                 request.userId(),
                 ChatSender.USER,
-                request.content(),
-                LocalDateTime.now()
+                request.content()
         ));
 
         chatRabbitProducer.publish(new ChatMessageEvent(saved.getId(), saved.getUserId(), saved.getContent()));

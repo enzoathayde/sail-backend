@@ -1,6 +1,7 @@
 package br.java.sail.services;
 
 import br.java.sail.dtos.ChatMessageEvent;
+import br.java.sail.dtos.StandardResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.messaging.Message;
@@ -22,7 +23,9 @@ public class ChatRabbitConsumer {
         ChatMessageEvent event = objectMapper.readValue(message.getPayload().toString(), ChatMessageEvent.class);
 
         String assistantContent = geminiExpenseService.replyFor(event.content());
-        chatService.saveAssistantMessage(event.userId(), assistantContent);
+
+        String standard = "{\"message\":\"Sucesso\",\"error\":false,\"data\": " +  assistantContent + "}";
+        chatService.saveAssistantMessage(event.userId(), standard);
         chatNotificationService.notifyUser(
                 event.userId(), "Nova mensagem gerada."
         );
