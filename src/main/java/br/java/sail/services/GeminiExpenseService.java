@@ -1,6 +1,7 @@
 package br.java.sail.services;
 
 import br.java.sail.dtos.GeminiExpenseResponse;
+import br.java.sail.exceptions.GeminiExpenseException;
 import com.google.genai.Client;
 import com.google.genai.errors.ApiException;
 import com.google.genai.types.GenerateContentConfig;
@@ -19,6 +20,20 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class GeminiExpenseService {
 
+
+    @Value("${gemini.api-key}")
+    private String geminiApiKey;
+
+    private final ObjectMapper objectMapper;
+    private Client client;
+
+    private Client client() {
+        if (client == null) {
+            client = Client.builder().apiKey(geminiApiKey).build();
+        }
+        return client;
+    }
+
     private static final List<String> MODELS = List.of(
             "gemini-3.5-flash",
             "gemini-3.5-flash-lite",
@@ -31,29 +46,24 @@ public class GeminiExpenseService {
             .responseJsonSchema(responseSchema())
             .build();
 
-    private final ObjectMapper objectMapper;
-    private Client client;
-
     public String replyFor(String userMessage) {
-        for (int index = 0; index < MODELS.size(); index++) {
-            String model = MODELS.get(index);
-
+        for (String model : MODELS) {
             try {
                 return toJson(fetchResponse(model, userMessage));
             } catch (ApiException ex) {
-                if (isRateLimit(ex) && index < MODELS.size() - 1) {
-                    continue;
-                }
-                throw ex;
+                if (!shouldRetry(ex)) throw ex;
             } catch (RuntimeException ex) {
-                if ((ex instanceof JacksonException || ex instanceof IllegalStateException) && index < MODELS.size() - 1) {
-                    continue;
-                }
-                throw ex;
+                if (!shouldRetry(ex)) throw ex;
             }
         }
 
-        throw new IllegalStateException("Gemini response could not be generated");
+        throw new GeminiExpenseException("Gemini response could not be generated");
+    }
+
+    private static boolean shouldRetry(Throwable ex) {
+        return ex instanceof ApiException api && isRateLimit(api)
+                || ex instanceof JacksonException
+                || ex instanceof IllegalStateException;
     }
 
     static String buildPrompt(String userMessage) {
@@ -64,10 +74,16 @@ public class GeminiExpenseService {
                 - estabelecimento: use null quando não estiver explícito no texto.
                 - categoria: use "Conta fixa" quando o texto indicar despesa recorrente ou conta de serviço, como luz, água, aluguel, internet, telefone ou boleto.
                 - valor: preserve o valor exatamente como foi escrito, sem símbolo de moeda.
-                - metodoPagamento: normalize para minúsculas quando houver método de pagamento; use null quando não houver.
+                - metodoPagamento: mude o valor para o padrão Primeira Maiúscula e corrija ortografia  (Ex: cartão de debito -> Cartão Débito) 
+                - parcela: caso Exista parcela, coloque-a como um valor inteiro.
+                
+                se o método for Cartão de Crédito, identifique se foi um pagamento à vista ou parcelado 
+                (e caso seja especificado adicionar parcelas: como nova chave valor. Se não for especificado, null)
 
                 Formato esperado:
                 {"estabelecimento":null,"categoria":"Conta fixa","valor":"89,90","metodoPagamento":"pix"}
+                ou                 
+                {"estabelecimento":"Casas Bahia","categoria":"Eletrodomésticos","valor":"1889,90","metodoPagamento":"Cartão Crédito","parcelas": "10"}
 
                 Texto:
                 %s
@@ -87,65 +103,31 @@ public class GeminiExpenseService {
         String text = response.text();
 
         if (text == null || text.isBlank()) {
-            throw new IllegalStateException("Gemini returned an empty response");
+            throw new GeminiExpenseException("Gemini returned an invalid response");
         }
 
-        return normalize(objectMapper.readValue(text, GeminiExpenseResponse.class));
-    }
-
-    static GeminiExpenseResponse normalize(GeminiExpenseResponse response) {
-        return new GeminiExpenseResponse(
-                blankToNull(response.estabelecimento()),
-                normalizeCategory(response.categoria()),
-                blankToNull(response.valor()),
-                normalizePaymentMethod(response.metodoPagamento())
-        );
+        return objectMapper.readValue(text, GeminiExpenseResponse.class);
     }
 
     private String toJson(GeminiExpenseResponse response) {
         return objectMapper.writeValueAsString(response);
     }
 
-    private static String blankToNull(String value) {
-        if (value == null) {
-            return null;
-        }
-
-        String trimmed = value.trim();
-        return trimmed.isEmpty() ? null : trimmed;
-    }
-
-    private static String normalizeCategory(String value) {
-        String normalized = blankToNull(value);
-        if (normalized == null) {
-            return null;
-        }
-
-        if ("conta fixa".equalsIgnoreCase(normalized)) {
-            return "Conta fixa";
-        }
-
-        return normalized;
-    }
-
-    private static String normalizePaymentMethod(String value) {
-        String normalized = blankToNull(value);
-        return normalized == null ? null : normalized.toLowerCase(Locale.ROOT);
-    }
-
     private static Map<String, Object> responseSchema() {
-        return Map.of(
+        Map<String, Object> type = Map.of(
                 "type", "object",
                 "properties", Map.of(
                         "estabelecimento", nullableStringSchema("Nome do estabelecimento, se houver."),
                         "categoria", nullableStringSchema("Categoria financeira da despesa."),
                         "valor", nullableStringSchema("Valor monetário exatamente como foi escrito."),
-                        "metodoPagamento", nullableStringSchema("Método de pagamento em minúsculas.")
+                        "metodoPagamento", nullableStringSchema("Método de pagamento com primeira Maiúscula."),
+                        "parcelas", nullableStringSchema("Quantidade de parcelas caso o método for no cŕedito, caso não haja, null e conta como transação única")
                 ),
-                "required", List.of("estabelecimento", "categoria", "valor", "metodoPagamento"),
+                "required", List.of("estabelecimento", "categoria", "valor", "metodoPagamento", "parcelas"),
                 "additionalProperties", false,
-                "propertyOrdering", List.of("estabelecimento", "categoria", "valor", "metodoPagamento")
+                "propertyOrdering", List.of("estabelecimento", "categoria", "valor", "metodoPagamento", "parcelas")
         );
+        return type;
     }
 
     private static Map<String, Object> nullableStringSchema(String description) {
@@ -155,13 +137,4 @@ public class GeminiExpenseService {
         );
     }
 
-    @Value("${gemini.api-key}")
-    private String geminiApiKey;
-
-    private Client client() {
-        if (client == null) {
-            client = Client.builder().apiKey(geminiApiKey).build();
-        }
-        return client;
-    }
 }

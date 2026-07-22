@@ -38,4 +38,11 @@ public class CustomExceptionHandler {
                 , HttpStatus.UNAUTHORIZED);
     }
 
+    @ExceptionHandler
+    public StandardResponse<?> errorGeminiResponse(Exception ex) {
+        log.warn("Erro ao gerar resposta: {}", ex.getMessage());
+
+        return new StandardResponse<>(ex.getMessage(), false, null);
+    }
+
 }

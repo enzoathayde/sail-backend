@@ -4,6 +4,7 @@ public record GeminiExpenseResponse(
         String estabelecimento,
         String categoria,
         String valor,
-        String metodoPagamento
+        String metodoPagamento,
+        String parcelas
 ) {
 }
