@@ -18,3 +18,5 @@ rabbit:
   exchange: chat-exchange
   queue: messages-queue
   routing-key: messages-routing
+gemini:
+  api-key:

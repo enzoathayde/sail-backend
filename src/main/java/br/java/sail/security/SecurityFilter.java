@@ -29,6 +29,19 @@ public class SecurityFilter extends OncePerRequestFilter {
     private final VaultUserRepository vaultUserRepository;
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getServletPath();
+        String method = request.getMethod();
+
+        return path.equals("/index.html")
+                || path.equals("/ws")
+                || path.startsWith("/ws/")
+                || path.equals("/test")
+                || path.startsWith("/test/")
+                || ("POST".equals(method) && (path.equals("/vault-users/generate") || path.equals("/vault-users/auth")));
+    }
+
+    @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String header = request.getHeader(AUTHORIZATION);
         if (header == null || !header.startsWith("Bearer ")) {
