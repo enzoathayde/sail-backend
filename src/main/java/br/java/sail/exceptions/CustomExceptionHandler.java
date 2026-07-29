@@ -4,8 +4,12 @@ import br.java.sail.dtos.StandardResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
+
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestControllerAdvice
@@ -36,6 +40,30 @@ public class CustomExceptionHandler {
         return new ResponseEntity<>(
                 new StandardResponse<>("Credenciais inválidas", true, null)
                 , HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<StandardResponse<?>> validationBodyError(MethodArgumentNotValidException ex) {
+        var message = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .collect(Collectors.joining(", "));
+
+        log.warn("Erro de validação: {}", message);
+
+        return new ResponseEntity<>(
+                new StandardResponse<>("Falha ao capturar os parâmetros da requisição. Por favor, tente novamente.", true, message),
+                HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler
+    ResponseEntity<StandardResponse<?>> paramAndPathError(HandlerMethodValidationException ex) {
+        var message = ex.getMessage();
+
+        return new ResponseEntity<>(
+                new StandardResponse<>("Falha ao capturar os parâmetros da requisição. Por favor, tente novamente.", true, message),
+                HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler
