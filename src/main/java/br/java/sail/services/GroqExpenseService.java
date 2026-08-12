@@ -1,11 +1,7 @@
 package br.java.sail.services;
 
 import br.java.sail.dtos.GeminiExpenseResponse;
-import br.java.sail.exceptions.GeminiExpenseException;
-import com.google.genai.Client;
-import com.google.genai.errors.ApiException;
-import com.google.genai.types.GenerateContentConfig;
-import com.google.genai.types.GenerateContentResponse;
+import io.github.frankleyrocha.groqapi.GroqApi;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -18,53 +14,30 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
-public class GeminiExpenseService {
+public class GroqExpenseService {
 
 
-    @Value("${gemini.api-key}")
-    private String geminiApiKey;
+    @Value("${groq.api-key}")
+    private String groqApiKey;
 
     private final ObjectMapper objectMapper;
-    private Client client;
+    private static final List<String> models = List.of("llama-3.3-70b-versatile", "llama-3.1-8b-instant");
 
-    private Client client() {
-        if (client == null) {
-            client = Client.builder().apiKey(geminiApiKey).build();
-        }
-        return client;
-    }
 
-    private static final List<String> MODELS = List.of(
-            "gemini-3.5-flash",
-            "gemini-3.5-flash-lite",
-            "gemini-3.1-flash-lite"
-    );
+    public String replyFor(String text) {
 
-    private static final GenerateContentConfig GENERATION_CONFIG = GenerateContentConfig.builder()
-            .responseMimeType("application/json")
-            .candidateCount(1)
-            .responseJsonSchema(responseSchema())
-            .build();
+        for (String model : models) {
 
-    public String replyFor(String userMessage) {
-        for (String model : MODELS) {
-            try {
-                return toJson(fetchResponse(model, userMessage));
-            } catch (ApiException ex) {
-                if (!shouldRetry(ex)) throw ex;
-            } catch (RuntimeException ex) {
-                if (!shouldRetry(ex)) throw ex;
-            }
+            GroqApi api = new GroqApi(groqApiKey);
+
+            return api.completions(
+                    model,
+                    buildPrompt(text)
+            );
         }
 
-        throw new GeminiExpenseException("Gemini response could not be generated");
     }
 
-    private static boolean shouldRetry(Throwable ex) {
-        return ex instanceof ApiException api && isRateLimit(api)
-                || ex instanceof JacksonException
-                || ex instanceof IllegalStateException;
-    }
 
     static String buildPrompt(String userMessage) {
         return """
@@ -88,25 +61,6 @@ public class GeminiExpenseService {
                 Texto:
                 %s
                 """.formatted(userMessage);
-    }
-
-    static boolean isRateLimit(ApiException exception) {
-        String message = exception.message().toLowerCase(Locale.ROOT);
-        return exception.code() == 429
-                || "RESOURCE_EXHAUSTED".equalsIgnoreCase(exception.status())
-                || message.contains("requests per minute")
-                || message.contains("requestsperminute");
-    }
-
-    GeminiExpenseResponse fetchResponse(String model, String userMessage) {
-        GenerateContentResponse response = client().models.generateContent(model, buildPrompt(userMessage), GENERATION_CONFIG);
-        String text = response.text();
-
-        if (text == null || text.isBlank()) {
-            throw new GeminiExpenseException("Gemini returned an invalid response");
-        }
-
-        return objectMapper.readValue(text, GeminiExpenseResponse.class);
     }
 
     private String toJson(GeminiExpenseResponse response) {
