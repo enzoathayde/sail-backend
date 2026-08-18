@@ -65,12 +65,4 @@ public class CustomExceptionHandler {
                 new StandardResponse<>("Falha ao capturar os parâmetros da requisição. Por favor, tente novamente.", true, message),
                 HttpStatus.BAD_REQUEST);
     }
-
-    @ExceptionHandler
-    public StandardResponse<?> errorGeminiResponse(Exception ex) {
-        log.warn("Erro ao gerar resposta: {}", ex.getMessage());
-
-        return new StandardResponse<>(ex.getMessage(), false, null);
-    }
-
 }

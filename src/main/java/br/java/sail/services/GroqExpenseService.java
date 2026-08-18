@@ -1,17 +1,14 @@
 package br.java.sail.services;
 
-import br.java.sail.dtos.GeminiExpenseResponse;
 import io.github.frankleyrocha.groqapi.GroqApi;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class GroqExpenseService {
@@ -20,22 +17,30 @@ public class GroqExpenseService {
     @Value("${groq.api-key}")
     private String groqApiKey;
 
-    private final ObjectMapper objectMapper;
     private static final List<String> models = List.of("llama-3.3-70b-versatile", "llama-3.1-8b-instant");
 
 
     public String replyFor(String text) {
 
+        String prompt = buildPrompt(text);
+
         for (String model : models) {
+            try {
+                GroqApi api = new GroqApi(groqApiKey);
 
-            GroqApi api = new GroqApi(groqApiKey);
+                String content = api.completions(model, prompt);
 
-            return api.completions(
-                    model,
-                    buildPrompt(text)
-            );
+                if (content != null && !content.isBlank()) {
+                    return content;
+                }
+
+                log.warn("Groq model '{}' retornou uma resposta vazia, indo para o pŕoximo moddelo", model);
+            } catch (RuntimeException ex) {
+                log.warn("Groq model '{}' com falha, indo para o próximo modelo.", model, ex);
+            }
         }
 
+        throw new IllegalStateException("Groq response could not be generated with any of the available models");
     }
 
 
@@ -61,34 +66,6 @@ public class GroqExpenseService {
                 Texto:
                 %s
                 """.formatted(userMessage);
-    }
-
-    private String toJson(GeminiExpenseResponse response) {
-        return objectMapper.writeValueAsString(response);
-    }
-
-    private static Map<String, Object> responseSchema() {
-        Map<String, Object> type = Map.of(
-                "type", "object",
-                "properties", Map.of(
-                        "estabelecimento", nullableStringSchema("Nome do estabelecimento, se houver."),
-                        "categoria", nullableStringSchema("Categoria financeira da despesa."),
-                        "valor", nullableStringSchema("Valor monetário exatamente como foi escrito."),
-                        "metodoPagamento", nullableStringSchema("Método de pagamento com primeira Maiúscula."),
-                        "parcelas", nullableStringSchema("Quantidade de parcelas caso o método for no cŕedito, caso não haja, null e conta como transação única")
-                ),
-                "required", List.of("estabelecimento", "categoria", "valor", "metodoPagamento", "parcelas"),
-                "additionalProperties", false,
-                "propertyOrdering", List.of("estabelecimento", "categoria", "valor", "metodoPagamento", "parcelas")
-        );
-        return type;
-    }
-
-    private static Map<String, Object> nullableStringSchema(String description) {
-        return Map.of(
-                "type", List.of("string", "null"),
-                "description", description
-        );
     }
 
 }
