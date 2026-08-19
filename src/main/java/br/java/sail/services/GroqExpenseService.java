@@ -17,7 +17,7 @@ public class GroqExpenseService {
     @Value("${groq.api-key}")
     private String groqApiKey;
 
-    private static final List<String> models = List.of("llama-3.3-70b-versatile", "llama-3.1-8b-instant");
+    private static final List<String> models = List.of("groq/compound", "groq/compound-mini");
 
 
     public String replyFor(String text) {

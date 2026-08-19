@@ -1,10 +1,12 @@
 package br.java.sail.dtos;
 
-public record GeminiExpenseResponse(
+import tools.jackson.databind.JsonNode;
+
+public record ExpenseData(
         String estabelecimento,
         String categoria,
         String valor,
         String metodoPagamento,
-        String parcelas
+        JsonNode parcelas
 ) {
 }

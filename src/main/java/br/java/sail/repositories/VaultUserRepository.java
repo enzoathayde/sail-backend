@@ -12,4 +12,6 @@ public interface VaultUserRepository extends JpaRepository<VaultUser, Long> {
     boolean existsByUserName(String userName);
 
     Optional<VaultUser> findByVaultKeyFingerprint(String vaultKeyFingerprint);
+
+    Optional<VaultUser> findByUserName(String userName);
 }

@@ -7,11 +7,13 @@ import br.java.sail.entities.VaultWords;
 import br.java.sail.exceptions.CreateSecurityObjectException;
 import br.java.sail.repositories.VaultUserRepository;
 import br.java.sail.repositories.VaultWordsRepository;
+import br.java.sail.security.JwtCookieFactory;
 import br.java.sail.security.VaultKeyCipher;
 import br.java.sail.usecases.GenerateVaultUserUseCase;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -37,15 +39,18 @@ public class GenerateVaultUserImplementation implements GenerateVaultUserUseCase
     private final VaultWordsRepository vaultWordsRepository;
     private final VaultUserRepository vaultUserRepository;
     private final VaultKeyCipher vaultKeyCipher;
+    private final JwtCookieFactory jwtCookieFactory;
 
     public GenerateVaultUserImplementation(
             VaultWordsRepository vaultWordsRepository,
             VaultUserRepository vaultUserRepository,
-            VaultKeyCipher vaultKeyCipher
+            VaultKeyCipher vaultKeyCipher,
+            JwtCookieFactory jwtCookieFactory
     ) {
         this.vaultWordsRepository = vaultWordsRepository;
         this.vaultUserRepository = vaultUserRepository;
         this.vaultKeyCipher = vaultKeyCipher;
+        this.jwtCookieFactory = jwtCookieFactory;
     }
 
     @Override
@@ -72,6 +77,7 @@ public class GenerateVaultUserImplementation implements GenerateVaultUserUseCase
             String generatedToken = generateToken(fingerprint, userName, saved.getIdUser());
 
             return ResponseEntity.status(HttpStatus.CREATED)
+                    .header(HttpHeaders.SET_COOKIE, jwtCookieFactory.fromToken(generatedToken).toString())
                     .body(new StandardResponse<>(
                             "Chave única gerada",
                             false,

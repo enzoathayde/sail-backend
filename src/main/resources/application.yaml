@@ -14,6 +14,9 @@ web: http://localhost:8081
 security:
   token:
     secret: secret
+  cookie:
+    name: sail-jwt
+    secure: false
 rabbit:
   exchange: chat-exchange
   queue: messages-queue

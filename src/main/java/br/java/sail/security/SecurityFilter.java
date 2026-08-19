@@ -7,6 +7,7 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -27,13 +28,15 @@ public class SecurityFilter extends OncePerRequestFilter {
 
     private final JwtTokenService jwtTokenService;
     private final VaultUserRepository vaultUserRepository;
+    private final JwtCookieFactory jwtCookieFactory;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
         String method = request.getMethod();
 
-        return path.equals("/index.html")
+        return "OPTIONS".equalsIgnoreCase(method)
+                || path.equals("/index.html")
                 || path.equals("/ws")
                 || path.startsWith("/ws/")
                 || path.equals("/test")
@@ -43,13 +46,11 @@ public class SecurityFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String header = request.getHeader(AUTHORIZATION);
-        if (header == null || !header.startsWith("Bearer ")) {
+        String token = extractToken(request);
+        if (token == null) {
             unauthorized(response);
             return;
         }
-
-        String token = header.substring(7);
 
         try {
             DecodedJWT decodedJWT = jwtTokenService.verify(token);
@@ -70,6 +71,24 @@ public class SecurityFilter extends OncePerRequestFilter {
         } catch (JWTVerificationException | IllegalStateException | java.util.NoSuchElementException ex) {
             unauthorized(response);
         }
+    }
+
+    private String extractToken(HttpServletRequest request) {
+        String header = request.getHeader(AUTHORIZATION);
+        if (header != null && header.startsWith("Bearer ")) {
+            return header.substring(7);
+        }
+
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (jwtCookieFactory.name().equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+
+        return null;
     }
 
     private void unauthorized(HttpServletResponse response) throws IOException {
