@@ -20,7 +20,7 @@ public class ChatRabbitConsumer {
     private static final String FAILURE_MESSAGE = "Não foi possível identificar o gasto. Tente novamente.";
 
     private final ChatService chatService;
-    private final GroqExpenseService groqExpenseService;
+    private final OpenRouterExpenseService openRouterExpenseService;
     private final ChatNotificationService chatNotificationService;
     private final ObjectMapper objectMapper;
 
@@ -36,7 +36,7 @@ public class ChatRabbitConsumer {
 
     private String buildAssistantPayload(ChatMessageEvent event) {
         try {
-            String raw = groqExpenseService.replyFor(event.content());
+            String raw = openRouterExpenseService.replyFor(event.content());
             ExpenseData data = objectMapper.readValue(raw, ExpenseData.class);
 
             return objectMapper.writeValueAsString(

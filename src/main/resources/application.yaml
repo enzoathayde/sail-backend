@@ -21,5 +21,7 @@ rabbit:
   exchange: chat-exchange
   queue: messages-queue
   routing-key: messages-routing
-groq:
-  api-key:
+openrouter:
+  base-url: https://openrouter.ai
+  api-key: ${OPENROUTER_API_KEY:sk-or-v1-23rh34fb3-f8034fb83f8bf0820f823f802389f0823fb823f0nsadxipqwnpodip}
+  models: openrouter/free,openai/gpt-ossem -20b:free,google/gemma-4-31b-it:free,nvidia/nemotron-3-nano-30b-a3b:free,z-ai/glm-5.2:free

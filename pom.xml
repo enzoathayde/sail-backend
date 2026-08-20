@@ -118,11 +118,6 @@
 			<artifactId>spring-boot-starter-websocket-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
-			<groupId>io.github.frankleyrocha</groupId>
-			<artifactId>groqapi</artifactId>
-			<version>1.0.2</version>
-		</dependency>
 	</dependencies>
 
 	<build>
