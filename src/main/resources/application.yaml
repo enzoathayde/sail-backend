@@ -16,7 +16,8 @@ security:
     secret: secret
   cookie:
     name: sail-jwt
-    secure: false
+    secure: true
+    same-site: None
 rabbit:
   exchange: chat-exchange
   queue: messages-queue

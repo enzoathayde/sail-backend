@@ -25,7 +25,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(request -> request
                         .requestMatchers( "/index.html").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/vault-users/generate", "/vault-users/auth").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/vault-users/generate", "/vault-users/auth", "/vault-users/logout").permitAll()
                         .requestMatchers("/ws/**", "/ws").permitAll()
                         .requestMatchers("/test", "/test/**").permitAll()
                         .anyRequest().authenticated())

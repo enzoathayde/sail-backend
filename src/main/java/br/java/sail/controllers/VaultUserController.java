@@ -8,6 +8,7 @@ import br.java.sail.dtos.VaultUserResponse;
 import br.java.sail.usecases.AuthenticateVaultUserUseCase;
 import br.java.sail.usecases.GenerateVaultUserUseCase;
 import br.java.sail.usecases.GetCurrentVaultUserUseCase;
+import br.java.sail.usecases.LogoutVaultUserUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,6 +25,7 @@ public class VaultUserController {
     private final GenerateVaultUserUseCase generateVaultUserUseCase;
     private final AuthenticateVaultUserUseCase authenticateVaultUserUseCase;
     private final GetCurrentVaultUserUseCase getCurrentVaultUserUseCase;
+    private final LogoutVaultUserUseCase logoutVaultUserUseCase;
 
     @PostMapping("/generate")
     public ResponseEntity<StandardResponse<VaultUserResponse>> generate() {
@@ -33,6 +35,11 @@ public class VaultUserController {
     @PostMapping("/auth")
     public ResponseEntity<StandardResponse<VaultAuthResponse>> auth(@RequestBody VaultAuthRequest request) {
         return authenticateVaultUserUseCase.execute(request);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout() {
+        return logoutVaultUserUseCase.execute();
     }
 
     @GetMapping("/me")

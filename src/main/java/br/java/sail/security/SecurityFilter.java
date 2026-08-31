@@ -41,7 +41,7 @@ public class SecurityFilter extends OncePerRequestFilter {
                 || path.startsWith("/ws/")
                 || path.equals("/test")
                 || path.startsWith("/test/")
-                || ("POST".equals(method) && (path.equals("/vault-users/generate") || path.equals("/vault-users/auth")));
+                || ("POST".equals(method) && (path.equals("/vault-users/generate") || path.equals("/vault-users/auth") || path.equals("/vault-users/logout")));
     }
 
     @Override

@@ -17,6 +17,9 @@ public class JwtCookieFactory {
     @Value("${security.cookie.secure}")
     private boolean secure;
 
+    @Value("${security.cookie.same-site}")
+    private String sameSite;
+
     public String name() {
         return cookieName;
     }
@@ -25,9 +28,19 @@ public class JwtCookieFactory {
         return ResponseCookie.from(cookieName, token)
                 .httpOnly(true)
                 .secure(secure)
-                .sameSite("Lax")
+                .sameSite(sameSite)
                 .path("/api")
                 .maxAge(MAX_AGE)
+                .build();
+    }
+
+    public ResponseCookie clear() {
+        return ResponseCookie.from(cookieName, "")
+                .httpOnly(true)
+                .secure(secure)
+                .sameSite(sameSite)
+                .path("/api")
+                .maxAge(Duration.ZERO)
                 .build();
     }
 }
