@@ -10,10 +10,12 @@ import br.java.sail.repositories.TransactionUserRepository;
 import br.java.sail.repositories.VaultUserRepository;
 import br.java.sail.services.TransactionScheduler;
 import br.java.sail.usecases.CreateTransactionUseCase;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -49,35 +51,24 @@ public class CreateTransactionImplementation implements CreateTransactionUseCase
         long totalCents = toCents(request.valor());
         int parcelas = request.parcelas() != null ? request.parcelas() : 1;
 
-        List<TransactionUser> saved = new ArrayList<>(parcelas);
+        List<TransactionUser> saved;
 
-        if (parcelas <= 1) {
-            saved.add(transactionUserRepository.save(new TransactionUser(
-                    user.getIdUser(),
-                    request.estabelecimento(),
-                    request.categoria(),
-                    request.metodoPagamento(),
-                    totalCents,
-                    1,
-                    1
-            )));
-        } else {
-            long base = totalCents / parcelas;
-            long remainder = totalCents % parcelas;
+        try {
+            if (parcelas <= 1) {
+                saved = List.of(saveTransaction(user, request, totalCents, 1, 1));
+            } else {
+                long base = totalCents / parcelas;
+                long remainder = totalCents % parcelas;
 
-            for (int installment = 1; installment <= parcelas; installment++) {
-                long installmentCents = base + (installment == 1 ? remainder : 0);
-
-                saved.add(transactionUserRepository.save(new TransactionUser(
-                        user.getIdUser(),
-                        request.estabelecimento(),
-                        request.categoria(),
-                        request.metodoPagamento(),
-                        installmentCents,
-                        installment,
-                        parcelas
-                )));
+                List<TransactionUser> accumulator = new ArrayList<>(parcelas);
+                for (int installment = 1; installment <= parcelas; installment++) {
+                    long installmentCents = base + (installment == 1 ? remainder : 0);
+                    accumulator.add(saveTransaction(user, request, installmentCents, installment, parcelas));
+                }
+                saved = accumulator;
             }
+        } catch (DataIntegrityViolationException ex) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Gasto já registrado para esta mensagem.");
         }
 
         transactionScheduler.computeDue();
@@ -92,6 +83,24 @@ public class CreateTransactionImplementation implements CreateTransactionUseCase
                         false,
                         responses
                 ));
+    }
+
+    private TransactionUser saveTransaction(VaultUser user, TransactionRequest request, long valor, int mesParcela, int parcelasTotais) {
+        TransactionUser transaction = new TransactionUser(
+                user.getIdUser(),
+                request.estabelecimento(),
+                request.categoria(),
+                request.metodoPagamento(),
+                valor,
+                mesParcela,
+                parcelasTotais
+        );
+
+        if (mesParcela == 1) {
+            transaction.setChatMessageId(request.chatMessageId());
+        }
+
+        return transactionUserRepository.save(transaction);
     }
 
     private long toCents(String valor) {

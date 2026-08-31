@@ -31,7 +31,8 @@ public class ChatService implements SendMessageUseCase {
                 userId,
                 ChatSender.ASSISTANT,
                 content,
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                null
         ));
     }
 
@@ -56,7 +57,8 @@ public class ChatService implements SendMessageUseCase {
                         saved.getUserId(),
                         saved.getSender().name(),
                         saved.getContent(),
-                        saved.getCreatedAt()
+                        saved.getCreatedAt(),
+                        saved.getAccepted()
                 )));
     }
 }

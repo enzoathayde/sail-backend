@@ -8,6 +8,7 @@ public record TransactionRequest(
         String categoria,
         @NotBlank String valor,
         String metodoPagamento,
-        @Positive Integer parcelas
+        @Positive Integer parcelas,
+        Long chatMessageId
 ) {
 }

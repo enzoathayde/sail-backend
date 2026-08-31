@@ -7,6 +7,7 @@ public record ChatMessageResponse(
         Long userId,
         String sender,
         String content,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        Boolean accepted
 ) {
 }

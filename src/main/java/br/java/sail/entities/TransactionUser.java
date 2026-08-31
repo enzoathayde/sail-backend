@@ -63,6 +63,9 @@ public class TransactionUser {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "chat_message_id", unique = true)
+    private Long chatMessageId;
+
     public TransactionUser(Long userId, String estabelecimento, String categoria, String metodoPagamento, Long valor, Integer mesParcela, Integer parcelasTotais) {
         this.userId = userId;
         this.estabelecimento = estabelecimento;

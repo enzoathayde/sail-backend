@@ -8,7 +8,9 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -64,5 +66,25 @@ public class CustomExceptionHandler {
         return new ResponseEntity<>(
                 new StandardResponse<>("Falha ao capturar os parâmetros da requisição. Por favor, tente novamente.", true, message),
                 HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<StandardResponse<?>> responseStatus(ResponseStatusException ex) {
+        log.warn("Conflito: {}", ex.getReason());
+
+        return new ResponseEntity<>(
+                new StandardResponse<>(ex.getReason() != null ? ex.getReason() : "Conflito", true, null),
+                ex.getStatusCode()
+        );
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<StandardResponse<?>> noSuchElement(NoSuchElementException ex) {
+        log.warn("Recurso não encontrado: {}", ex.getMessage());
+
+        return new ResponseEntity<>(
+                new StandardResponse<>("Recurso não encontrado", true, null),
+                HttpStatus.NOT_FOUND
+        );
     }
 }

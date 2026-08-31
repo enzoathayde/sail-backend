@@ -49,6 +49,9 @@ public class ChatMessage {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "accepted")
+    private Boolean accepted;
+
     public ChatMessage(Long userId, ChatSender sender, String content) {
         this.userId = userId;
         this.sender = sender;
